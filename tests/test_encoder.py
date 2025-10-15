@@ -3,7 +3,6 @@
 import os
 import tempfile
 import pytest
-from pathlib import Path
 
 from file_encoder.encoder import FileEncoder
 

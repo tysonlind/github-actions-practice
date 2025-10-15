@@ -2,9 +2,7 @@
 
 import os
 import tempfile
-import pytest
 from click.testing import CliRunner
-from pathlib import Path
 
 from file_encoder.cli import main
 
