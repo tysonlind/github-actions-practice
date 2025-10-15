@@ -1,0 +1,2 @@
+[console_scripts]
+encode = file_encoder.cli:main

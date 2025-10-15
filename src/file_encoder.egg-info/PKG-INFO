@@ -1,3 +1,26 @@
+Metadata-Version: 2.4
+Name: file-encoder
+Version: 0.1.0
+Summary: A CLI tool for encoding files with various character encodings
+Author-email: Your Name <your.email@example.com>
+License: MIT
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: click>=8.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Dynamic: license-file
+
 # File Encoder
 
 A Python package for encoding files with various character encodings.
@@ -106,4 +129,3 @@ This project uses:
 ## GitHub Actions
 
 https://docs.github.com/en/actions/get-started/quickstart
-https://docs.github.com/en/billing/concepts/product-billing/github-actions
