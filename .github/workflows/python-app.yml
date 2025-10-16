@@ -33,6 +33,7 @@ jobs:
         python -m pip install --upgrade pip
         # Install the package in editable mode with dev dependencies
         pip install -e ".[dev]"
+        pip install build
         
     - name: Lint with ruff
       run: |
