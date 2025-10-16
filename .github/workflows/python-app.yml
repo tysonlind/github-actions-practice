@@ -14,9 +14,7 @@ permissions:
 
 jobs:
   test:
-    runs-on:
-      - github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
-        image:ubuntu-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.12", "3.13"]
