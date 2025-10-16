@@ -40,7 +40,7 @@ jobs:
         
     - name: Test with pytest
       run: |
-        pytest -v --cov=file_encoder --cov-report=xml --cov-report=term-missing
+        pytest -v --cov=file_encoder --cov-report=xml --cov-report=term-missing > pytest-output.txt 2>&1
         
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
