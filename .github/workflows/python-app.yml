@@ -55,5 +55,13 @@ jobs:
         path: |
           pytest-output.txt
           coverage.xml
+        retention-days: 30
+
+    - name: Upload package artifacts
+      uses: actions/upload-artifact@v4
+      if: matrix.python-version == '3.13'
+      with:
+        name: package-results
+        path: |
           dist/
         retention-days: 30
