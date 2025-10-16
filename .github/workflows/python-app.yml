@@ -14,8 +14,8 @@ permissions:
 
 jobs:
   test:
-    runs-on: 
-      - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on:  ubuntu-latest
+      #- codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
     strategy:
       matrix:
         python-version: ["3.12", "3.13"]
@@ -42,9 +42,13 @@ jobs:
       run: |
         pytest -v --cov=file_encoder --cov-report=xml --cov-report=term-missing > pytest-output.txt 2>&1
         
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
       if: matrix.python-version == '3.13'
       with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
+        name: test-results
+        path: |
+          pytest-output.txt
+          coverage.xml
+          htmlcov/
+        retention-days: 30
