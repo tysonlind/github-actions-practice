@@ -14,8 +14,8 @@ permissions:
 
 jobs:
   test:
-    runs-on:  ubuntu-latest
-      #- codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on:
+      - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
     strategy:
       matrix:
         python-version: ["3.12", "3.13"]
@@ -50,5 +50,4 @@ jobs:
         path: |
           pytest-output.txt
           coverage.xml
-          htmlcov/
         retention-days: 30
