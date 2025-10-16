@@ -41,6 +41,10 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -v --cov=file_encoder --cov-report=xml --cov-report=term-missing > pytest-output.txt 2>&1
+      
+    - name: Build package
+      run: |
+        python -m build
         
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
@@ -50,4 +54,5 @@ jobs:
         path: |
           pytest-output.txt
           coverage.xml
+          dist/
         retention-days: 30
