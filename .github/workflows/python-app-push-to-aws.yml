@@ -64,7 +64,7 @@ jobs:
             aws s3 cp "$file" s3://${{ secrets.AWS_S3_BUCKET }}/wheels/
           fi
         done
-        
+
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
       if: matrix.python-version == '3.13'
@@ -74,3 +74,29 @@ jobs:
           pytest-output.txt
           coverage.xml
         retention-days: 30
+
+    - name: Configure CodeArtifact
+      if: matrix.python-version == '3.13'
+      run: |
+        # Get CodeArtifact authorization token
+        export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain zabalytics --query authorizationToken --output text)
+
+        # Configure pip to use CodeArtifact
+        aws codeartifact login --tool pip --domain zabalytics --repository pypi
+
+        # Configure twine for publishing
+        pip install twine
+
+        # Get the repository endpoint
+        export CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint --domain zabalytics --repository pypi --format pypi --query repositoryEndpoint --output text)
+
+        echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+        echo "CODEARTIFACT_REPOSITORY_URL=$CODEARTIFACT_REPOSITORY_URL" >> $GITHUB_ENV
+
+    - name: Publish to CodeArtifact
+      if: matrix.python-version == '3.13'
+      run: |
+        twine upload --repository-url $CODEARTIFACT_REPOSITORY_URL/simple/ \
+          --username aws \
+          --password $CODEARTIFACT_AUTH_TOKEN \
+          dist/*.whl
