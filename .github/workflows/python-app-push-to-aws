@@ -1,0 +1,80 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on:
+      - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
+    environment: test
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # Install the package in editable mode with dev dependencies
+        pip install -e ".[dev]"
+        pip install build
+
+    - name: Lint with ruff
+      run: |
+        ruff check
+
+    - name: Test with pytest
+      run: |
+        pytest -v --cov=file_encoder --cov-report=xml --cov-report=term-missing > pytest-output.txt 2>&1
+
+    - name: Build package
+      run: |
+        python -m build
+
+    - name: Upload to S3
+      uses: shallwefootball/s3-upload-action@master
+      if: matrix.python-version == '3.13'  # Only upload once
+      with:
+        aws_key_id: ${{ secrets.AWS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_bucket: ${{ secrets.AWS_BUCKET }}
+        source_dir: 'dist'
+        destination_dir: 'packages'  # Optional: organize in S3
+
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: matrix.python-version == '3.13'
+      with:
+        name: test-results
+        path: |
+          pytest-output.txt
+          coverage.xml
+        retention-days: 30
+
+    - name: Upload wheel to S3
+      uses: shallwefootball/s3-upload-action@master
+      if: matrix.python-version == '3.13'
+      with:
+        aws_key_id: ${{ secrets.AWS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_bucket: ${{ secrets.AWS_BUCKET }}
+        source_dir: 'dist'
+        destination_dir: 'wheels'
+        file_pattern: '*.whl'
