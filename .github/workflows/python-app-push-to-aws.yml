@@ -48,16 +48,19 @@ jobs:
       run: |
         python -m build
 
-    - name: Upload wheel to S3
-      uses: shallwefootball/s3-upload-action@master
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
       if: matrix.python-version == '3.13'
       with:
-        aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_bucket: ${{ secrets.AWS_S3_BUCKET }}
-        source_dir: 'dist'
-        destination_dir: 'wheels'
-        file_pattern: '*.whl'
+        aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+    - name: Upload wheel to S3
+      if: matrix.python-version == '3.13'
+      run: |
+        aws s3 cp dist/*.whl s3://${{ secrets.AWS_S3_BUCKET }}/wheels/ --recursive
+
 
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
