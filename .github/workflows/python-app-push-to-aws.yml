@@ -79,6 +79,7 @@ jobs:
       if: matrix.python-version == '3.13'
       run: |
         # Get CodeArtifact authorization token
+        pip install twine
         export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain zabalytics --query authorizationToken --output text)
 
         # Configure pip to use CodeArtifact
