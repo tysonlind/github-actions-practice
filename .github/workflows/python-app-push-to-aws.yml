@@ -59,9 +59,12 @@ jobs:
     - name: Upload wheel to S3
       if: matrix.python-version == '3.13'
       run: |
-        aws s3 cp dist/*.whl s3://${{ secrets.AWS_S3_BUCKET }}/wheels/ --recursive
-
-
+        for file in dist/*.whl; do
+          if [ -f "$file" ]; then
+            aws s3 cp "$file" s3://${{ secrets.AWS_S3_BUCKET }}/wheels/
+          fi
+        done
+        
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4
       if: matrix.python-version == '3.13'
