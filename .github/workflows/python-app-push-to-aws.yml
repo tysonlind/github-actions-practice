@@ -78,26 +78,13 @@ jobs:
     - name: Configure CodeArtifact
       if: matrix.python-version == '3.13'
       run: |
-        # Get CodeArtifact authorization token
-        pip install twine
-        export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain zabalytics --query authorizationToken --output text)
-
-        # Configure pip to use CodeArtifact
-        aws codeartifact login --tool pip --domain zabalytics --repository pypi
-
-        # Configure twine for publishing
+        # Install twine from PyPI first (before configuring CodeArtifact)
         pip install twine
 
-        # Get the repository endpoint
-        export CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint --domain zabalytics --repository pypi --format pypi --query repositoryEndpoint --output text)
-
-        echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
-        echo "CODEARTIFACT_REPOSITORY_URL=$CODEARTIFACT_REPOSITORY_URL" >> $GITHUB_ENV
+        # Configure twine to use CodeArtifact (this handles auth and URL automatically)
+        aws codeartifact login --tool twine --domain zabalytics --repository pypi
 
     - name: Publish to CodeArtifact
       if: matrix.python-version == '3.13'
       run: |
-        twine upload --repository-url $CODEARTIFACT_REPOSITORY_URL/simple/ \
-          --username aws \
-          --password $CODEARTIFACT_AUTH_TOKEN \
-          dist/*.whl
+        twine upload dist/*.whl
