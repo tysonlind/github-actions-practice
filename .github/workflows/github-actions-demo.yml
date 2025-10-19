@@ -5,7 +5,6 @@ jobs:
   Explore-GitHub-Actions:
     runs-on:
       - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
-    environment: <GitHub environment to use for secrets and variables>
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
@@ -14,7 +13,3 @@ jobs:
         uses: actions/checkout@v5
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
