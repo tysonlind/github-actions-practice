@@ -1,0 +1,70 @@
+# ----------------------------------------------------------
+# Workflow name - this appears in the GitHub Actions tab
+# ----------------------------------------------------------
+name: CI Pipeline
+
+# ----------------------------------------------------------
+# Triggers - when the workflow runs
+# ----------------------------------------------------------
+on:
+  push:                     # Trigger when code is pushed
+    branches: [ main ]      # ...but only if it's to the 'main' branch
+  pull_request:             # Trigger when a pull request is opened or updated
+    branches: [ main ]      # ...and the target branch is 'main'
+
+# ----------------------------------------------------------
+# Jobs - define sets of steps to run
+# ----------------------------------------------------------
+jobs:
+  build:                    # The job ID (you can name this anything)
+    runs-on: ubuntu-latest  # The OS environment the job runs in (GitHub provides Ubuntu, macOS, Windows runners)
+    environment: <GitHub environment to use for secrets and variables>
+
+    # ------------------------------------------------------
+    # Each job runs a series of steps
+    # ------------------------------------------------------
+    steps:
+      # ----------------------------------------------------
+      # 1. Checkout repository
+      #    This pulls your code into the GitHub Actions runner
+      # ----------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4  # 'uses' runs a prebuilt GitHub Action (here: checkout)
+
+      # ----------------------------------------------------
+      # 2. Set up Python environment
+      #    This installs the desired Python version
+      # ----------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5  # Another prebuilt GitHub Action
+        with:
+          python-version: '3.12'       # Specify which Python version to install
+
+      # ----------------------------------------------------
+      # 3. Install project dependencies
+      #    Runs shell commands (just like in your terminal)
+      # ----------------------------------------------------
+      - name: Install dependencies
+        run: |                         # The '|' means multiple lines of shell commands follow
+          python -m pip install --upgrade pip   # Upgrade pip first
+          pip install -r requirements.txt       # Install dependencies from your requirements file
+
+      # ----------------------------------------------------
+      # 4. Run automated tests
+      #    This ensures your code works and doesn’t break existing features
+      # ----------------------------------------------------
+      - name: Run tests
+        run: |
+          pytest --maxfail=1 --disable-warnings -q  # Run pytest with limited output
+
+      # ----------------------------------------------------
+      # 5. Lint code
+      #    Runs a static analysis tool to check code quality/style
+      # ----------------------------------------------------
+      - name: Lint code
+        run: |
+          ruff check .   # Run ruff to check for linting errors
+
+# ----------------------------------------------------------
+# End of file
+# ----------------------------------------------------------
