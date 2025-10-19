@@ -83,8 +83,8 @@ jobs:
         pip install twine
 
         # Get CodeArtifact credentials
-        export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain zabalytics --query authorizationToken --output text)
-        export CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint --domain zabalytics --repository pypi --format pypi --query repositoryEndpoint --output text)
+        export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain zabalytics --query authorizationToken --output text --region us-west-2)
+        export CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint --domain zabalytics --repository pypi --format pypi --query repositoryEndpoint --output text --region us-west-2)
 
         echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
         echo "CODEARTIFACT_REPOSITORY_URL=$CODEARTIFACT_REPOSITORY_URL" >> $GITHUB_ENV
