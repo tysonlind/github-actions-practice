@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
   actions: write
-
+    #adding note
 jobs:
   test:
     runs-on: codebuild-codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
