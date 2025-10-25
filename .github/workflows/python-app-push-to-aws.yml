@@ -77,7 +77,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
-      S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+      S3_BUCKET: is3600-homework-bucket
       S3_PREFIX: wheels/
       CODEART_DOMAIN: lindalytics
       CODEART_REPO: codeart
