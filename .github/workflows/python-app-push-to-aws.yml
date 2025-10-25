@@ -73,7 +73,7 @@ jobs:
     name: Publish wheel (Python 3.13 only)
     needs: [test]
     runs-on:
-      - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
+      - codebuild-codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     env:
       AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
