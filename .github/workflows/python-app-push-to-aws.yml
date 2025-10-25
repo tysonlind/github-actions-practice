@@ -81,7 +81,7 @@ jobs:
       S3_PREFIX: wheels/
       CODEART_DOMAIN: lindalytics
       CODEART_REPO: codeart
-      CODEART_REGION: ${{ vars.AWS_REGION }}
+      CODEART_REGION: us-east-2
 
     steps:
       - name: Check out
@@ -119,7 +119,7 @@ jobs:
 
       - name: Publish to CodeArtifact
         env:
-          CODEART_REGION: ${{ vars.CODEART_REGION }}
+          CODEART_REGION: us-east-2
         run: |
           set -e
 
