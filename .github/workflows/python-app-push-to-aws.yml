@@ -80,7 +80,7 @@ jobs:
       S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
       S3_PREFIX: wheels/
       CODEART_DOMAIN: lindalytics
-      CODEART_REPO: pypi
+      CODEART_REPO: codeart
       CODEART_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
