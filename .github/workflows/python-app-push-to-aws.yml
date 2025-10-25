@@ -123,6 +123,8 @@ jobs:
         run: |
           set -e
 
+          #adding comment to make a change
+
           ENDPOINT=$(aws codeartifact get-repository-endpoint \
             --domain "${CODEART_DOMAIN}" \
             --repository "${CODEART_REPO}" \
