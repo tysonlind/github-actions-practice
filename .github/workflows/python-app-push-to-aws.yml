@@ -76,12 +76,12 @@ jobs:
       - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     env:
-      AWS_REGION: ${{ env.AWS_REGION }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
       S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
       S3_PREFIX: wheels/
       CODEART_DOMAIN: lindalytics
       CODEART_REPO: codeart
-      CODEART_REGION: ${{ env.AWS_REGION }}
+      CODEART_REGION: ${{ vars.AWS_REGION }}
 
     steps:
       - name: Check out
@@ -108,7 +108,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
 
       - name: Upload wheel to S3
