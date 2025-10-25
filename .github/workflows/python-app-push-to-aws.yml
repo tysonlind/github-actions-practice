@@ -1,14 +1,11 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "*" ]  # Run on all branches
-    tags: [ "v*" ]     # Run on version tags
+    branches: ["*"]
+    tags: ["v*"]
   pull_request:
-    branches: [ "*" ]  # Run on PRs to all branches
+    branches: ["*"]
 
 permissions:
   contents: read
@@ -19,90 +16,153 @@ jobs:
       - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
     environment: test
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.12", "3.13"]
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Check out
+        uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # Install the package in editable mode with dev dependencies
-        pip install -e ".[dev]"
-        pip install build
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"  
+          pip install build
 
-    - name: Lint with ruff
-      run: |
-        ruff check
+      - name: Ruff lint
+        run: ruff check .
 
-    - name: Test with pytest
-      run: |
-        pytest -v --cov=file_encoder --cov-report=xml --cov-report=term-missing > pytest-output.txt 2>&1
+      - name: Test with pytest and coverage
+        run: |
+          pytest -v \
+            --junitxml=pytest-report.xml \
+            --cov=file_encoder \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing | tee pytest-output.txt
 
-    - name: Build package
-      run: |
-        python -m build
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-py${{ matrix.python-version }}
+          path: |
+            pytest-output.txt
+            pytest-report.xml
+            coverage.xml
+          retention-days: 30
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      if: matrix.python-version == '3.13' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      - name: Build package
+        run: |
+          python -m build 
+          ls -l dist
 
-    - name: Upload wheel to S3
-      if: matrix.python-version == '3.13' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-      run: |
-        for file in dist/*.whl; do
-          if [ -f "$file" ]; then
-            aws s3 cp "$file" s3://${{ secrets.AWS_S3_BUCKET }}/wheels/
-          fi
-        done
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-py${{ matrix.python-version }}
+          path: dist/*.whl
+          retention-days: 30
 
-    - name: Upload test artifacts
-      uses: actions/upload-artifact@v4
-      if: matrix.python-version == '3.13'
-      with:
-        name: test-results
-        path: |
-          pytest-output.txt
-          coverage.xml
-        retention-days: 30
+  publish:
+    name: Publish wheel (Python 3.13 only)
+    needs: [test]
+    runs-on:
+      - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    env:
+      AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+      S3_PREFIX: wheels/
+      CODEART_DOMAIN: lindalytics
+      CODEART_REPO: pypi
+      CODEART_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
-    - name: Configure CodeArtifact
-      if: matrix.python-version == '3.13' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-      run: |
-        # Install twine from PyPI first
-        pip install twine
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
 
-        # Get CodeArtifact credentials
-        export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain zabalytics --query authorizationToken --output text --region us-west-2)
-        export CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint --domain zabalytics --repository pypi --format pypi --query repositoryEndpoint --output text --region us-west-2)
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
 
-        echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
-        echo "CODEARTIFACT_REPOSITORY_URL=$CODEARTIFACT_REPOSITORY_URL" >> $GITHUB_ENV
+      - name: Install tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine awscli
 
-    - name: Publish to CodeArtifact
-      if: matrix.python-version == '3.13' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-      run: |
-        # Delete existing package (ignore if it doesn't exist)
-        aws codeartifact delete-package-versions \
-          --domain zabalytics \
-          --repository pypi \
-          --format pypi \
-          --package file-encoder \
-          --versions 0.1.0 \
-          --region us-west-2 || true
+      - name: Build wheel
+        run: |
+          python -m build --wheel
+          ls -l dist
 
-        # Upload the package
-        twine upload --repository-url $CODEARTIFACT_REPOSITORY_URL \
-          --username aws \
-          --password $CODEARTIFACT_AUTH_TOKEN \
-          dist/*.whl
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Upload wheel to S3
+        run: |
+          set -e
+          WHEEL_PATH="$(ls dist/*.whl | head -n 1)"
+          aws s3 cp "$WHEEL_PATH" "s3://${S3_BUCKET}/${S3_PREFIX}"
+
+      - name: Publish to CodeArtifact
+        env:
+          CODEART_REGION: ${{ env.CODEART_REGION }}
+        run: |
+          set -e
+
+          ENDPOINT=$(aws codeartifact get-repository-endpoint \
+            --domain "${CODEART_DOMAIN}" \
+            --repository "${CODEART_REPO}" \
+            --format pypi \
+            --region "${CODEART_REGION}" \
+            --query repositoryEndpoint --output text)
+
+          TOKEN=$(aws codeartifact get-authorization-token \
+            --domain "${CODEART_DOMAIN}" \
+            --region "${CODEART_REGION}" \
+            --query authorizationToken --output text)
+
+          ls -l dist/*.whl
+
+          WHEEL_FILE=$(ls dist/*.whl | head -n 1)
+          PKG_NAME=$(python - <<'PY'
+import re,sys,os
+p=os.environ["WHEEL_FILE"]
+m=re.search(r'/([^/-]+)-([0-9][^-/]*)-', p)
+print(m.group(1) if m else "")
+PY
+)
+          PKG_VER=$(python - <<'PY'
+import re,sys,os
+p=os.environ["WHEEL_FILE"]
+m=re.search(r'/([^/-]+)-([0-9][^-/]*)-', p)
+print(m.group(2) if m else "")
+PY
+)
+          export WHEEL_FILE PKG_NAME PKG_VER
+
+          aws codeartifact delete-package-versions \
+            --domain "${CODEART_DOMAIN}" \
+            --repository "${CODEART_REPO}" \
+            --format pypi \
+            --package "${PKG_NAME}" \
+            --versions "${PKG_VER}" \
+            --region "${CODEART_REGION}" || true
+
+          twine upload --non-interactive \
+            --repository-url "${ENDPOINT}" \
+            -u aws -p "${TOKEN}" dist/*.whl
+
