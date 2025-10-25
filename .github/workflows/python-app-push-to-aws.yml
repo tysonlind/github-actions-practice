@@ -141,8 +141,8 @@ jobs:
 
           WHEEL_FILE=$(ls dist/*.whl | head -n 1)
           BASE=$(basename "$WHEEL_FILE")
-          PKG_NAME="${BASE%%-*}"                 # everything before first '-'
-          REST="${BASE#${PKG_NAME}-}"            # strip '<name>-'
+          PKG_NAME="${BASE%%-*}"      
+          REST="${BASE#${PKG_NAME}-}"            
           PKG_VER="${REST%%-*}"                  
           
           export WHEEL_FILE PKG_NAME PKG_VER
