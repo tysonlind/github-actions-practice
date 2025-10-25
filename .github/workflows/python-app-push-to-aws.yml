@@ -140,20 +140,11 @@ jobs:
           ls -l dist/*.whl
 
           WHEEL_FILE=$(ls dist/*.whl | head -n 1)
-          PKG_NAME=$(python - <<'PY'
-import re,sys,os
-p=os.environ["WHEEL_FILE"]
-m=re.search(r'/([^/-]+)-([0-9][^-/]*)-', p)
-print(m.group(1) if m else "")
-PY
-)
-          PKG_VER=$(python - <<'PY'
-import re,sys,os
-p=os.environ["WHEEL_FILE"]
-m=re.search(r'/([^/-]+)-([0-9][^-/]*)-', p)
-print(m.group(2) if m else "")
-PY
-)
+          BASE=$(basename "$WHEEL_FILE")
+          PKG_NAME="${BASE%%-*}"                 # everything before first '-'
+          REST="${BASE#${PKG_NAME}-}"            # strip '<name>-'
+          PKG_VER="${REST%%-*}"                  # everything before next '-'
+          
           export WHEEL_FILE PKG_NAME PKG_VER
 
           aws codeartifact delete-package-versions \
