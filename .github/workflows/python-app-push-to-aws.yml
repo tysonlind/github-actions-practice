@@ -12,8 +12,7 @@ permissions:
 
 jobs:
   test:
-    runs-on:
-      - codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on: codebuild-github-actions-practice-${{ github.run_id }}-${{ github.run_attempt }}
     environment: test
     strategy:
       fail-fast: false
